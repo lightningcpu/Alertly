@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-06-04T08:54:35.390288700Z">
+        <DropdownSelection timestamp="2024-11-10T14:37:53.078683600Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=20d38d6d" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Tatiana\.android\avd\Pixel_3a_API_34.avd" />
             </handle>
           </Target>
         </DropdownSelection>
