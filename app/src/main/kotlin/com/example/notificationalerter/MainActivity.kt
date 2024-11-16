@@ -48,10 +48,10 @@ class MainActivity : AppCompatActivity() {
                 if (packageName != null) {
                     if (isChecked) {
                         MyNotificationListenerService.addSelectedApp(packageName)
-                        Toast.makeText(this@MainActivity, "Selected: $packageName", Toast.LENGTH_SHORT).show()
+//                        Toast.makeText(this@MainActivity, "Selected: $packageName", Toast.LENGTH_SHORT).show()
                     } else {
                         MyNotificationListenerService.removeSelectedApp(packageName)
-                        Toast.makeText(this@MainActivity, "Deselected: $packageName", Toast.LENGTH_SHORT).show()
+//                        Toast.makeText(this@MainActivity, "Deselected: $packageName", Toast.LENGTH_SHORT).show()
                     }
                 }
             }

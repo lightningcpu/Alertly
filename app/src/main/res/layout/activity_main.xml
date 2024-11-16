@@ -12,7 +12,7 @@
         android:id="@+id/toggle_listener_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Toggle alerter"
+        android:text="Start Listener"
         android:textSize="11sp"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
