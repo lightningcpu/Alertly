@@ -1,0 +1,5 @@
+1. Increased SDK version from 33 to 35.
+2. Increased min SDK version from 29 to 31.
+3. Migrated app to Kotlin.
+4. Removed selected/deselected pop-ups.
+5. Fixed button glitch during first mount.
