@@ -30,6 +30,8 @@ class MyNotificationListenerService : NotificationListenerService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        searchWord = null
+        stopListening()
         Log.d(TAG, "NotificationListenerService onDestroy")
     }
 

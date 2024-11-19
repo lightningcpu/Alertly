@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity() {
             if (isNotificationAccessGranted) {
                 toggleListenerButton!!.visibility = View.VISIBLE
             } else {
-                Toast.makeText(this, "Notification access not granted.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Notification access not granted", Toast.LENGTH_SHORT).show()
             }
         } else if (requestCode == REQUEST_SOUND_PICKER) {
             if (resultCode == RESULT_OK) {
@@ -131,10 +131,10 @@ class MainActivity : AppCompatActivity() {
                     // Handle the selected sound URI here
                     // You can save it or use it to set the notification sound for your app
                     MyNotificationListenerService.customSoundUri = selectedSoundUri
-                    Toast.makeText(this, "Selected sound: $selectedSoundUri", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Sound selected", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this, "No sound selected.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No sound selected", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -176,6 +176,9 @@ class MainActivity : AppCompatActivity() {
 
         // Stop the notification listener service
         stopService(Intent(this, MyNotificationListenerService::class.java))
+//        (applicationContext as MyNotificationListenerService).onListenerDisconnected()  // Explicitly call it
+//        finishAffinity()  // This will finish all activities and close the app properly
+        MyNotificationListenerService.setSearchWord(null)
     }
 
     private fun createNotificationChannel() {
