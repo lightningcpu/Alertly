@@ -4,6 +4,13 @@ plugins {
 }
 
 android {
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
+
     namespace 'com.example.notificationalerter'
     compileSdk 35
 
@@ -19,9 +26,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-//            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-//             Add the vcsInfo block to disable VCS info generation
+            minifyEnabled false
             vcsInfo.include false
         }
     }
