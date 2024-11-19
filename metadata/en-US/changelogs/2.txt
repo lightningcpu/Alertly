@@ -3,3 +3,4 @@
 3. Migrated app to Kotlin.
 4. Removed selected/deselected pop-ups.
 5. Fixed button glitch during first mount.
+6. Fixed stop button
