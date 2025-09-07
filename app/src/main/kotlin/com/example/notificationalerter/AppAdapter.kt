@@ -6,53 +6,49 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.CheckBox
-import android.widget.CompoundButton
 import android.widget.ImageView
 import android.widget.TextView
+import com.example.notificationalerter.data.AppInfo
 
-class AppAdapter(context: Context?, private val appList: List<AppInfo>) : ArrayAdapter<AppInfo?>(context!!, 0, appList) {
-    private val inflater: LayoutInflater = LayoutInflater.from(context)
+class AppAdapter(context: Context, private val appList: List<AppInfo>) :
+    ArrayAdapter<AppInfo>(context, 0, appList) {
+
     private var listener: OnCheckedChangeListener? = null
+    private val inflater: LayoutInflater = LayoutInflater.from(context)
 
     fun setOnCheckedChangeListener(listener: OnCheckedChangeListener?) {
         this.listener = listener
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        var convertView = convertView
-        val holder: ViewHolder
-        if (convertView == null) {
-            convertView = inflater.inflate(R.layout.list_item_app, parent, false)
-            holder = ViewHolder()
-            holder.iconImageView = convertView.findViewById(R.id.icon_image_view)
-            holder.nameTextView = convertView.findViewById(R.id.name_text_view)
-            holder.checkBox = convertView.findViewById(R.id.checkbox)
-            convertView.setTag(holder)
-        } else {
-            holder = convertView.tag as ViewHolder
-        }
+        val view = convertView ?: inflater.inflate(R.layout.list_item_app, parent, false)
+        val holder = view.tag as? ViewHolder ?: ViewHolder(view).also { view.tag = it }
 
-        val appInfo = appList[position]
+        val appInfo = getItem(position) ?: return view
 
-        holder.iconImageView!!.setImageDrawable(appInfo.icon)
-        holder.nameTextView!!.text = appInfo.name
+        holder.bind(appInfo, listener)
 
-        holder.checkBox!!.setOnCheckedChangeListener(null)
-        holder.checkBox!!.isChecked = appInfo.isChecked
-        holder.checkBox!!.setOnCheckedChangeListener { compoundButton: CompoundButton?, isChecked: Boolean ->
-            appInfo.isChecked = isChecked
-            if (listener != null) {
-                listener!!.onCheckedChange(appInfo.packageName, isChecked)
-            }
-        }
-
-        return convertView!!
+        return view
     }
 
-    internal class ViewHolder {
-        var iconImageView: ImageView? = null
-        var nameTextView: TextView? = null
-        var checkBox: CheckBox? = null
+    private class ViewHolder(view: View) {
+        private val iconImageView: ImageView = view.findViewById(R.id.icon_image_view)
+        private val nameTextView: TextView = view.findViewById(R.id.name_text_view)
+        private val checkBox: CheckBox = view.findViewById(R.id.checkbox)
+
+        fun bind(appInfo: AppInfo, listener: OnCheckedChangeListener?) {
+            iconImageView.setImageDrawable(appInfo.icon)
+            nameTextView.text = appInfo.name
+
+            // Remove previous listener to avoid duplicate calls
+            checkBox.setOnCheckedChangeListener(null)
+            checkBox.isChecked = appInfo.isChecked
+
+            checkBox.setOnCheckedChangeListener { _, isChecked ->
+                appInfo.isChecked = isChecked
+                listener?.onCheckedChange(appInfo.packageName, isChecked)
+            }
+        }
     }
 
     interface OnCheckedChangeListener {

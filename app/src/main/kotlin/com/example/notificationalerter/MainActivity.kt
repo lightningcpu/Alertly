@@ -1,13 +1,11 @@
 package com.example.notificationalerter
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.RingtoneManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.provider.Settings
@@ -17,6 +15,13 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
+import com.example.notificationalerter.data.AppInfo
+import com.example.notificationalerter.data.AppSelectionRepository
+import com.example.notificationalerter.utils.Constants
+import com.example.notificationalerter.utils.NotificationUtils
+import com.example.notificationalerter.viewmodel.MainViewModel
 
 class MainActivity : AppCompatActivity() {
     private var toggleListenerButton: Button? = null
@@ -24,8 +29,9 @@ class MainActivity : AppCompatActivity() {
     private var appAdapter: AppAdapter? = null
     private var isListenerEnabled = false
     private var searchInput: EditText? = null
-
     private var chooseNotificationButton: Button? = null
+
+    private lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,103 +44,90 @@ class MainActivity : AppCompatActivity() {
 
         isListenerEnabled = false
 
-        toggleListenerButton?.setOnClickListener(View.OnClickListener { toggleListener() })
+        // Initialize ViewModel
+        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
 
-        chooseNotificationButton?.setOnClickListener(View.OnClickListener { openNotificationSoundPicker() })
+        toggleListenerButton?.setOnClickListener { toggleListener() }
+        chooseNotificationButton?.setOnClickListener { openNotificationSoundPicker() }
 
-        appAdapter = AppAdapter(this, installedApps)
-        appAdapter!!.setOnCheckedChangeListener(object : AppAdapter.OnCheckedChangeListener {
-            override fun onCheckedChange(packageName: String?, isChecked: Boolean) {
-                if (packageName != null) {
-                    if (isChecked) {
-                        MyNotificationListenerService.addSelectedApp(packageName)
-//                        Toast.makeText(this@MainActivity, "Selected: $packageName", Toast.LENGTH_SHORT).show()
-                    } else {
-                        MyNotificationListenerService.removeSelectedApp(packageName)
-//                        Toast.makeText(this@MainActivity, "Deselected: $packageName", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        })
-        appListView?.setAdapter(appAdapter)
-
-        if (isNotificationAccessGranted) {
-            toggleListenerButton?.setVisibility(View.VISIBLE)
-        } else {
-            toggleListenerButton?.setVisibility(View.GONE)
-            requestNotificationAccessPermission()
-        }
+        setupAppList()
+        setupNotificationAccess()
 
         // Retrieve the selected sound URI from SharedPreferences
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val selectedSoundUriString = preferences.getString(PREF_SELECTED_SOUND_URI, null)
+        val selectedSoundUriString = preferences.getString(Constants.PREF_SELECTED_SOUND_URI, null)
         if (selectedSoundUriString != null) {
             val selectedSoundUri = Uri.parse(selectedSoundUriString)
             MyNotificationListenerService.customSoundUri = selectedSoundUri
         }
 
-        createNotificationChannel()
+        NotificationUtils.createNotificationChannel(this)
     }
 
-    private val installedApps: List<AppInfo>
-        get() {
-            val appList: MutableList<AppInfo> = ArrayList()
-            val packageManager = packageManager
-            val applications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-            val appPackageName = packageName
-
-            for (applicationInfo in applications) {
-                val packageName = applicationInfo.packageName
-
-                // Exclude the app itself
-                if (packageName != appPackageName && isLaunchable(packageManager, packageName)) {
-                    val appInfo = AppInfo()
-                    appInfo.packageName = packageName
-                    appInfo.name = applicationInfo.loadLabel(packageManager).toString()
-                    appInfo.icon = applicationInfo.loadIcon(packageManager)
-                    appList.add(appInfo)
-                }
+    private fun setupAppList() {
+        viewModel.loadInstalledApps()
+        viewModel.installedApps.observe(this) { apps ->
+            // Initialize apps with their checked state from repository
+            val appsWithSelectionState = apps.map { app ->
+                app.copy(isChecked = AppSelectionRepository.isSelected(app.packageName))
             }
 
-            return appList
+            appAdapter = AppAdapter(this, appsWithSelectionState)
+            appAdapter!!.setOnCheckedChangeListener(object : AppAdapter.OnCheckedChangeListener {
+                override fun onCheckedChange(packageName: String?, isChecked: Boolean) {
+                    if (packageName != null) {
+                        if (isChecked) {
+                            AppSelectionRepository.addApp(packageName)
+                        } else {
+                            AppSelectionRepository.removeApp(packageName)
+                        }
+                    }
+                }
+            })
+            appListView?.adapter = appAdapter
         }
+    }
 
-    private fun isLaunchable(packageManager: PackageManager, packageName: String): Boolean {
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-        return launchIntent != null
+    private fun setupNotificationAccess() {
+        if (isNotificationAccessGranted) {
+            toggleListenerButton?.visibility = View.VISIBLE
+        } else {
+            toggleListenerButton?.visibility = View.GONE
+            requestNotificationAccessPermission()
+        }
     }
 
     private fun requestNotificationAccessPermission() {
         val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-        startActivityForResult(intent, REQUEST_NOTIFICATION_ACCESS)
+        startActivityForResult(intent, Constants.REQUEST_NOTIFICATION_ACCESS)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == REQUEST_NOTIFICATION_ACCESS) {
-            if (isNotificationAccessGranted) {
-                toggleListenerButton!!.visibility = View.VISIBLE
-            } else {
-                Toast.makeText(this, "Notification access not granted", Toast.LENGTH_SHORT).show()
-            }
-        } else if (requestCode == REQUEST_SOUND_PICKER) {
-            if (resultCode == RESULT_OK) {
-                val selectedSoundUri = data!!.getParcelableExtra<Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
-                if (selectedSoundUri != null) {
-                    // Save the selected sound URI to SharedPreferences
-                    val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-                    val editor = preferences.edit()
-                    editor.putString(PREF_SELECTED_SOUND_URI, selectedSoundUri.toString())
-                    editor.apply()
-
-                    // Handle the selected sound URI here
-                    // You can save it or use it to set the notification sound for your app
-                    MyNotificationListenerService.customSoundUri = selectedSoundUri
-                    Toast.makeText(this, "Sound selected", Toast.LENGTH_SHORT).show()
+        when (requestCode) {
+            Constants.REQUEST_NOTIFICATION_ACCESS -> {
+                if (isNotificationAccessGranted) {
+                    toggleListenerButton?.visibility = View.VISIBLE
+                } else {
+                    Toast.makeText(this, "Notification access not granted", Toast.LENGTH_SHORT).show()
                 }
-            } else {
-                Toast.makeText(this, "No sound selected", Toast.LENGTH_SHORT).show()
+            }
+            Constants.REQUEST_SOUND_PICKER -> {
+                if (resultCode == RESULT_OK) {
+                    val selectedSoundUri = data?.getParcelableExtra<Uri>(android.media.RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+                    if (selectedSoundUri != null) {
+                        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+                        val editor = preferences.edit()
+                        editor.putString(Constants.PREF_SELECTED_SOUND_URI, selectedSoundUri.toString())
+                        editor.apply()
+
+                        MyNotificationListenerService.customSoundUri = selectedSoundUri
+                        Toast.makeText(this, "Sound selected", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this, "No sound selected", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -155,61 +148,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startListener() {
-        toggleListenerButton!!.text = "Stop Listener"
+        toggleListenerButton?.text = "Stop Listener"
         isListenerEnabled = true
         Toast.makeText(this, "Listener started", Toast.LENGTH_SHORT).show()
 
-        // Get the search word from the input field
-        val searchWord = searchInput!!.text.toString().trim { it <= ' ' }
-
-        // Pass the search word to the notification listener service
+        val searchWord = searchInput?.text?.toString()?.trim()
         MyNotificationListenerService.setSearchWord(searchWord)
 
-        // Start the notification listener service
         startService(Intent(this, MyNotificationListenerService::class.java))
     }
 
     private fun stopListener() {
-        toggleListenerButton!!.text = "Start Listener"
+        toggleListenerButton?.text = "Start Listener"
         isListenerEnabled = false
         Toast.makeText(this, "Listener stopped", Toast.LENGTH_SHORT).show()
 
-        // Stop the notification listener service
         stopService(Intent(this, MyNotificationListenerService::class.java))
-//        (applicationContext as MyNotificationListenerService).onListenerDisconnected()  // Explicitly call it
-//        finishAffinity()  // This will finish all activities and close the app properly
         MyNotificationListenerService.setSearchWord(null)
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name: CharSequence = "Alerter Channel"
-            val description = "Channel for alerter notifications"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-
-            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance)
-            channel.description = description
-
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
-
     private fun openNotificationSoundPicker() {
-        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
-        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
-        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Notification Sound")
-        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, null as Uri?)
-        startActivityForResult(intent, REQUEST_SOUND_PICKER)
-    }
-
-    companion object {
-        private const val REQUEST_NOTIFICATION_ACCESS = 1
-        private const val REQUEST_SOUND_PICKER = 2
-        private const val NOTIFICATION_CHANNEL_ID = "alerter_channel_id"
-
-        private const val PREF_SELECTED_SOUND_URI = "selected_sound_uri"
+        val intent = Intent(android.media.RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+            putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TYPE, android.media.RingtoneManager.TYPE_NOTIFICATION)
+            putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Notification Sound")
+            putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, null as Uri?)
+        }
+        startActivityForResult(intent, Constants.REQUEST_SOUND_PICKER)
     }
 }
-
-
