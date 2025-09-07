@@ -7,6 +7,4 @@ object AppSelectionRepository {
     fun addApp(packageName: String) = _selectedApps.add(packageName)
     fun removeApp(packageName: String) = _selectedApps.remove(packageName)
     fun isSelected(packageName: String) = _selectedApps.contains(packageName)
-
-    fun clearAll() = _selectedApps.clear()
 }

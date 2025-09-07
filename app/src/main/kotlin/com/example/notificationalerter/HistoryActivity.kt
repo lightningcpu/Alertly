@@ -2,7 +2,6 @@
 package com.example.notificationalerter
 
 import android.os.Bundle
-import android.view.View
 import android.widget.Button
 import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
@@ -27,20 +26,27 @@ class HistoryActivity : AppCompatActivity() {
     }
 
     private fun setupHistoryList() {
-        val historyItems = NotificationHistoryRepository.getHistory()
-        adapter = HistoryAdapter(this, historyItems)
+        // Create adapter with an empty mutable list so we can update it later
+        adapter = HistoryAdapter(this, ArrayList())
         historyListView.adapter = adapter
+
+        // Observe repository LiveData to keep UI in sync automatically
+        NotificationHistoryRepository.historyLiveData.observe(this) { items ->
+            adapter.clear()
+            adapter.addAll(items)
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun setupButtons() {
         clearButton.setOnClickListener {
             NotificationHistoryRepository.clearHistory()
-            adapter.notifyDataSetChanged()
+            // No need to manually update adapter — LiveData observer will run
         }
 
         deleteSelectedButton.setOnClickListener {
             NotificationHistoryRepository.deleteSelectedItems()
-            setupHistoryList() // Refresh the list
+            // LiveData observer will update the adapter
         }
     }
 }
