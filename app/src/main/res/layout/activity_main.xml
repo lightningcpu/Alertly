@@ -8,6 +8,15 @@
     android:paddingBottom="16dp"
     tools:context=".MainActivity">
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/history_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_history" />
+
     <Button
         android:id="@+id/toggle_listener_button"
         android:layout_width="wrap_content"

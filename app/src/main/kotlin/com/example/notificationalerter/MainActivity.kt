@@ -1,10 +1,7 @@
 package com.example.notificationalerter
 
-import android.app.NotificationManager
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
@@ -15,13 +12,12 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
-import com.example.notificationalerter.data.AppInfo
 import com.example.notificationalerter.data.AppSelectionRepository
 import com.example.notificationalerter.utils.Constants
 import com.example.notificationalerter.utils.NotificationUtils
 import com.example.notificationalerter.viewmodel.MainViewModel
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
     private var toggleListenerButton: Button? = null
@@ -56,6 +52,12 @@ class MainActivity : AppCompatActivity() {
         // Retrieve the selected sound URI from SharedPreferences
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val selectedSoundUriString = preferences.getString(Constants.PREF_SELECTED_SOUND_URI, null)
+        val historyFab = findViewById<FloatingActionButton>(R.id.history_fab)
+        historyFab.setOnClickListener {
+            val intent = Intent(this, HistoryActivity::class.java)
+            startActivity(intent)
+        }
+
         if (selectedSoundUriString != null) {
             val selectedSoundUri = Uri.parse(selectedSoundUriString)
             MyNotificationListenerService.customSoundUri = selectedSoundUri

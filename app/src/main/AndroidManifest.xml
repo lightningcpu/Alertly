@@ -36,6 +36,10 @@
 
         </activity>
 
+        <activity
+            android:name=".HistoryActivity"
+            android:label="Notification History" />
+
         <!-- Add the notification access service declaration -->
         <service
             android:name=".MyNotificationListenerService"

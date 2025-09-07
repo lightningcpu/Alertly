@@ -12,6 +12,9 @@ import com.example.notificationalerter.data.AppSelectionRepository
 import com.example.notificationalerter.utils.NotificationUtils
 import com.example.notificationalerter.utils.SoundManager
 import java.util.Locale
+import com.example.notificationalerter.data.NotificationHistoryItem
+import com.example.notificationalerter.data.NotificationHistoryRepository
+import java.util.Date
 
 class MyNotificationListenerService : NotificationListenerService() {
     private lateinit var soundManager: SoundManager
@@ -46,6 +49,31 @@ class MyNotificationListenerService : NotificationListenerService() {
             if (containsSearchWord(text)) {
                 soundManager.playSound(customSoundUri)
                 sendNotificationBroadcast(packageName, title, text)
+
+                val appName = try {
+                    val appInfo = packageManager.getApplicationInfo(packageName, 0)
+                    appInfo.loadLabel(packageManager).toString()
+                } catch (e: Exception) {
+                    packageName
+                }
+
+                val appIcon = try {
+                    val appInfo = packageManager.getApplicationInfo(packageName, 0)
+                    appInfo.loadIcon(packageManager)
+                } catch (e: Exception) {
+                    null
+                }
+
+                val historyItem = NotificationHistoryItem(
+                    packageName = packageName,
+                    appName = appName,
+                    appIcon = appIcon,
+                    title = title,
+                    text = text,
+                    timestamp = Date()
+                )
+
+                NotificationHistoryRepository.addHistoryItem(historyItem)
             }
         }
     }
