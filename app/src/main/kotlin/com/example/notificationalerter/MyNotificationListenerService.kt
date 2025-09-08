@@ -67,13 +67,15 @@ class MyNotificationListenerService : NotificationListenerService() {
                 val historyItem = NotificationHistoryItem(
                     packageName = packageName,
                     appName = appName,
-                    appIcon = appIcon,
                     title = title,
                     text = text,
                     timestamp = Date()
-                )
+                ).apply {
+                    this.appIcon = appIcon
+                }
 
-                NotificationHistoryRepository.addHistoryItem(historyItem)
+                val repository = NotificationHistoryRepository.getInstance(this)
+                repository.addHistoryItem(historyItem)
             }
         }
     }
@@ -90,6 +92,13 @@ class MyNotificationListenerService : NotificationListenerService() {
     }
 
     private fun sendNotificationBroadcast(packageName: String, title: String?, text: String?) {
+        // Check if notifications are enabled for the app
+        if (!notificationManager.areNotificationsEnabled()) {
+            Log.w(TAG, "Notifications are disabled for the app. Cannot show notification.")
+            return // Exit early if permissions are missing
+        }
+
+        // Proceed to build and show the notification
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -106,7 +115,11 @@ class MyNotificationListenerService : NotificationListenerService() {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
 
-        notificationManager.notify(NOTIFICATION_ID, builder.build())
+        try {
+            notificationManager.notify(NOTIFICATION_ID, builder.build())
+        } catch (e: SecurityException) {
+            Log.e(TAG, "SecurityException: Permission denied for notifications", e)
+        }
     }
 
     companion object {

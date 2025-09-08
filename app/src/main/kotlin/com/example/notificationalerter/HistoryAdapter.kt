@@ -30,6 +30,17 @@ class HistoryAdapter(context: Context, private val historyList: List<Notificatio
         return view
     }
 
+    fun getSelectedIds(): List<Long> {
+        val selectedIds = mutableListOf<Long>()
+        for (i in 0 until count) {
+            val item = getItem(i)
+            if (item != null && item.isChecked) {
+                selectedIds.add(item.id)
+            }
+        }
+        return selectedIds
+    }
+
     private inner class ViewHolder(view: View) {
         private val iconImageView: ImageView = view.findViewById(R.id.icon_image_view)
         private val appNameTextView: TextView = view.findViewById(R.id.app_name_text_view)
