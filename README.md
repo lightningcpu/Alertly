@@ -7,14 +7,16 @@ This Android application enhances user experience by filtering and highlighting 
 - **Keyword Detection:** Specify a keyword that the app will watch for in incoming notifications.
 - **Custom Sound Effects:** Choose a unique sound effect to play when the keyword is detected.
 - **Selective Listening:** Select which apps the listener should monitor for notifications.
-- **Enhanced Notification Management:** Ensures that notifications containing the keyword stand out from others.
+- **Enhanced Notification Highlighting:**    Notifications containing the keyword are clearly distinguished from others.
+- **Local Notification Storage:** Detected notifications are stored locally for later viewing and management.
 
 ### Usage
 1. **Select Sound Effect:** Choose a preferred sound effect for notifications.
 2. **Set Keyword:** Enter a specific keyword that the app will search for in notifications.
 3. **Choose Apps:** Select the apps from which notifications should be monitored.
 4. **Activate Listener:** Enable the app's listener to start monitoring incoming notifications.
-5. **Permission Requirements:** Make sure to enable necessary permissions for the app to function properly.
+5. **Manage Notifications:** View, delete selected, or clear all stored notifications.
+6. **Grant Permissions:** Ensure all required permissions are enabled for proper functionality.
 
 ### Download
 - **F-Droid:** You can download the latest version of the app from [F-Droid](https://f-droid.org/en/packages/com.example.notificationalerter/).
