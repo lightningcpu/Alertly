@@ -1,0 +1,7 @@
+1. Fixed minor bugs.
+2. Added SQLite database support for local storage.
+3. All detected notifications are now stored locally for later viewing.
+4. Added notification management features.
+5. Added support for deleting selected notifications from the database.
+6. Added an option to clear all stored notifications at once.
+7. Introduced a new UI for stored notification management.
